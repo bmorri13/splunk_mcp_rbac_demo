@@ -1,0 +1,28 @@
+services:
+  splunk:
+    image: splunk/splunk:latest
+    platform: linux/amd64   # no arm64 manifest published; runs via Rosetta on Apple Silicon
+    container_name: splunk-mcp-test
+    hostname: so1
+    environment:
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_GENERAL_TERMS: --accept-sgt-current-at-splunk-com
+      SPLUNK_PASSWORD: ChangeMe123!
+      SPLUNK_APPS_URL: /tmp/apps/splunk-mcp-server_121.tgz
+    ports:
+      - "8000:8000"   # Splunk Web
+      - "8089:8089"   # splunkd management API + MCP endpoint (/services/mcp)
+    volumes:
+      - ./splunk-mcp-server_121.tgz:/tmp/apps/splunk-mcp-server_121.tgz:ro
+      - splunk-etc:/opt/splunk/etc
+      - splunk-var:/opt/splunk/var
+    healthcheck:
+      test: ["CMD", "curl", "-sk", "https://localhost:8089/services/server/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+
+volumes:
+  splunk-etc:
+  splunk-var:
